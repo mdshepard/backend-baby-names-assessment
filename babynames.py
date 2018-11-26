@@ -41,36 +41,76 @@ Suggested milestones for incremental development:
 
 def extract_names(filename):
     """
-    Given a file name for baby.html, returns a list starting with the year string
-    followed by the name-rank strings in alphabetical order.
+    Given a file name for baby.html, returns a list starting with the year
+    string followed by the name-rank strings in alphabetical order.
     ['2006', 'Aaliyah 91', Aaron 57', 'Abagail 895', ' ...]
     """
-    # +++your code here+++
-    return
+    # +++your code here++
+    name_list = []
+    searched_file = open(filename, 'r')
+    text = searched_file.read()
+    year = re.search(r'Popularity\sin\s(\d\d\d\d)', text)
+    name_list.append(year.group(1))
+    names = re.findall(r'<td>(\d+)</td><td>(\w+)</td>\<td>(\w+)</td>', text)
+    ranked_dict = {}
+
+    for name in names:
+        rank, boy, girl = name
+        if boy not in ranked_dict:
+            ranked_dict[boy] = rank
+        if girl not in ranked_dict:
+            ranked_dict[girl] = rank
+
+    ordered_names = sorted(ranked_dict.keys())
+    for name in ordered_names:
+        name_list.append(name + ' ' + ranked_dict[name])
+    return name_list
+
+
+def create_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--summaryfile', help='creates a summary file', action='store_true'
+        )
+    parser.add_argument(
+        'files', help='filename(s) to parse', nargs='+'
+        )
+    return parser
 
 
 def main():
-    # This command-line parsing code is provided.
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--summaryfile', help='creates a summary file', action='store_true')
-    # The nargs option instructs the parser to expect 1 or more filenames.
-    # It will also expand wildcards just like the shell, e.g. 'baby*.html' will work.
-    parser.add_argument('files', help='filename(s) to parse', nargs='+')
-    args = parser.parse_args()
+    """# This command-line parsing code is provided.
 
+    # The nargs option instructs the parser to expect 1 or more filenames.
+    # It will also expand wildcards just like the shell,
+    #  e.g. 'baby*.html' will work."""
+    parser = create_parser()
+    args = parser.parse_args()
     if not args:
         parser.print_usage()
         sys.exit(1)
 
-    file_list = args.files
+    file_list = list(args.files)
 
     # option flag
     create_summary = args.summaryfile
-
     # +++your code here+++
     # For each filename, get the names, then either print the text output
     # or write it to a summary file
+
+    for f in file_list:
+        baby_file = f
+        names = extract_names(baby_file)
+        baby_names = '\n'.join(names)
+
+        if create_summary:
+            stripped_fname = baby_file[0:-5]
+            summary_template = (stripped_fname + '.summary')
+            new_summary = open(summary_template, 'w')
+            new_summary.write(baby_names + '\n')
+            new_summary.close()
+        else:
+            print(baby_names)
 
 
 if __name__ == '__main__':
